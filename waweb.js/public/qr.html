@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp QR</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0e17;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+        }
+        .qr-box {
+            width: 220px; height: 220px;
+            background: white;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 30px rgba(37,211,102,0.2);
+            border: 3px solid rgba(37,211,102,0.35);
+            overflow: hidden;
+        }
+        .qr-box img { width: 200px; height: 200px; }
+        .placeholder {
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            color: #888;
+        }
+        .placeholder .icon { font-size: 40px; }
+        .placeholder p { font-size: 12px; text-align: center; }
+        .status {
+            font-size: 12px;
+            color: #8899b0;
+            text-align: center;
+            line-height: 1.6;
+        }
+        .status strong { color: #f0f4ff; display: block; margin-bottom: 2px; }
+        .dot {
+            display: inline-block; width: 7px; height: 7px;
+            border-radius: 50%; background: #f59e0b;
+            animation: pulse 1.5s infinite;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+        .dot.green { background: #25d366; }
+        .dot.red { background: #ef4444; animation: none; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="qr-box">
+        <div class="placeholder" id="placeholder">
+            <div class="icon">📱</div>
+            <p>Menunggu<br>QR Code...</p>
+        </div>
+        <img id="qrImg" src="" alt="QR" style="display:none;">
+    </div>
+    <div class="status" id="statusText">
+        <span class="dot" id="dot"></span>
+        <strong id="statusTitle">Menghubungkan...</strong>
+        <span id="statusDesc">Menghubungkan ke server</span>
+    </div>
+</div>
+
+<script>
+const ws = new WebSocket(`ws://${location.host}`);
+
+ws.onmessage = (evt) => {
+    try {
+        const { event, data } = JSON.parse(evt.data);
+        if (event === 'qr') {
+            showQR(data.qrDataURL);
+        } else if (event === 'state') {
+            if (data.status === 'QR' && data.qr) {
+                // Fetch QR image from server
+                fetch('/api/qr?token=' + encodeURIComponent(getToken()))
+                    .then(r => r.json())
+                    .then(d => { if (d.qrDataURL) showQR(d.qrDataURL); });
+            } else if (data.status === 'READY') {
+                showConnected();
+            }
+        } else if (event === 'ready') {
+            showConnected();
+        } else if (event === 'authenticated') {
+            document.getElementById('statusTitle').textContent = 'Autentikasi Berhasil!';
+            document.getElementById('statusDesc').textContent = 'Memuat sesi WhatsApp...';
+            document.getElementById('dot').className = 'dot green';
+        } else if (event === 'disconnected') {
+            showDisconnected();
+        }
+    } catch(e) {}
+};
+
+ws.onclose = () => {
+    showDisconnected();
+    setTimeout(() => location.reload(), 4000);
+};
+
+function getToken() {
+    const params = new URLSearchParams(location.search);
+    return params.get('token') || '';
+}
+
+function showQR(dataURL) {
+    document.getElementById('qrImg').src = dataURL;
+    document.getElementById('qrImg').style.display = 'block';
+    document.getElementById('placeholder').style.display = 'none';
+    document.getElementById('dot').className = 'dot';
+    document.getElementById('statusTitle').textContent = 'QR Code Siap!';
+    document.getElementById('statusDesc').textContent = 'Buka WhatsApp > Perangkat Tertaut > Scan';
+}
+
+function showConnected() {
+    document.getElementById('qrImg').style.display = 'none';
+    document.getElementById('placeholder').style.display = 'flex';
+    document.getElementById('placeholder').innerHTML = '<div class="icon">✅</div><p>Terhubung!</p>';
+    document.getElementById('dot').className = 'dot green';
+    document.getElementById('statusTitle').textContent = 'Bot Aktif & Terhubung';
+    document.getElementById('statusDesc').textContent = 'Siap menerima & mengirim pesan';
+}
+
+function showDisconnected() {
+    document.getElementById('dot').className = 'dot red';
+    document.getElementById('statusTitle').textContent = 'Koneksi Terputus';
+    document.getElementById('statusDesc').textContent = 'Mencoba menyambung kembali...';
+}
+</script>
+</body>
+</html>

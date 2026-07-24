@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Bot Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-card: #111827;
+            --bg-card2: #1a2235;
+            --accent-green: #25d366;
+            --accent-teal: #00bfa5;
+            --accent-blue: #3b82f6;
+            --accent-red: #ef4444;
+            --accent-yellow: #f59e0b;
+            --text-primary: #f0f4ff;
+            --text-muted: #8899b0;
+            --border: rgba(255,255,255,0.07);
+            --glow-green: 0 0 20px rgba(37,211,102,0.25);
+            --glow-blue: 0 0 20px rgba(59,130,246,0.2);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #0f1e35 0%, #0a1628 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .header-logo .icon {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-teal));
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            box-shadow: var(--glow-green);
+        }
+        .header-logo h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+        .header-logo span { font-size: 12px; color: var(--text-muted); display: block; }
+
+        .status-badge {
+            display: flex; align-items: center; gap: 8px;
+            padding: 7px 14px;
+            border-radius: 999px;
+            font-size: 13px; font-weight: 500;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        .status-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        .status-badge.ready { background: rgba(37,211,102,0.1); border-color: rgba(37,211,102,0.3); color: var(--accent-green); }
+        .status-badge.ready .status-dot { background: var(--accent-green); }
+        .status-badge.qr { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: var(--accent-yellow); }
+        .status-badge.qr .status-dot { background: var(--accent-yellow); }
+        .status-badge.disconnected { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: var(--accent-red); }
+        .status-badge.disconnected .status-dot { background: var(--accent-red); animation: none; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        /* Main Layout */
+        .container { max-width: 1280px; margin: 0 auto; padding: 28px; }
+        .grid { display: grid; grid-template-columns: 340px 1fr; gap: 24px; }
+
+        /* Card */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .card-title {
+            font-size: 14px; font-weight: 600;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .card-title .dot { width: 7px; height: 7px; border-radius: 50%; }
+        .card-body { padding: 20px; }
+
+        /* QR Section */
+        .qr-container {
+            display: flex; flex-direction: column; align-items: center; gap: 16px;
+            padding: 24px 20px;
+        }
+        .qr-wrapper {
+            position: relative;
+            width: 240px; height: 240px;
+            border-radius: 16px;
+            overflow: hidden;
+            background: white;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 40px rgba(37,211,102,0.15);
+            border: 3px solid rgba(37,211,102,0.3);
+        }
+        .qr-wrapper img { width: 220px; height: 220px; }
+        .qr-placeholder {
+            display: flex; flex-direction: column; align-items: center; gap: 12px;
+            color: #555;
+        }
+        .qr-placeholder .icon-big { font-size: 48px; }
+        .qr-placeholder p { font-size: 13px; text-align: center; }
+
+        .qr-status-text {
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+        .qr-status-text strong { color: var(--text-primary); display: block; margin-bottom: 4px; }
+
+        /* Notification Feed */
+        .notif-feed {
+            display: flex; flex-direction: column; gap: 0;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .notif-feed::-webkit-scrollbar { width: 4px; }
+        .notif-feed::-webkit-scrollbar-track { background: transparent; }
+        .notif-feed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+        .notif-item {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex; gap: 12px; align-items: flex-start;
+            transition: background 0.15s;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+        .notif-item:hover { background: rgba(255,255,255,0.02); }
+        .notif-item:last-child { border-bottom: none; }
+        .notif-icon { font-size: 18px; flex-shrink: 0; padding-top: 2px; }
+        .notif-content { flex: 1; min-width: 0; }
+        .notif-title {
+            font-size: 13px; font-weight: 500;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .notif-body {
+            font-size: 12px; color: var(--text-muted);
+            margin-top: 2px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .notif-time {
+            font-size: 11px; color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        /* Send API Section */
+        .api-section { display: flex; flex-direction: column; gap: 20px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-label { font-size: 12px; font-weight: 500; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; }
+        .form-input {
+            background: var(--bg-card2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 11px 14px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            transition: all 0.2s;
+            outline: none;
+            width: 100%;
+        }
+        .form-input:focus {
+            border-color: rgba(37,211,102,0.4);
+            box-shadow: 0 0 0 3px rgba(37,211,102,0.08);
+        }
+        .btn-send {
+            background: linear-gradient(135deg, #25d366, #00bfa5);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: all 0.2s;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(37,211,102,0.3);
+        }
+        .btn-send:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,211,102,0.4); }
+        .btn-send:active { transform: translateY(0); }
+        .btn-send:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .api-doc {
+            background: var(--bg-card2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 16px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .api-doc code {
+            color: var(--accent-green);
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            display: block;
+            margin: 4px 0;
+        }
+        .api-doc .method { color: var(--accent-blue); font-weight: 600; }
+
+        /* Toast */
+        .toast-container {
+            position: fixed; bottom: 24px; right: 24px;
+            display: flex; flex-direction: column; gap: 10px;
+            z-index: 999;
+        }
+        .toast {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 13px;
+            display: flex; align-items: center; gap: 10px;
+            min-width: 260px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+        .toast.success { border-color: rgba(37,211,102,0.4); }
+        .toast.error { border-color: rgba(239,68,68,0.4); }
+        .toast.info { border-color: rgba(59,130,246,0.4); }
+
+        /* API Token Box */
+        .token-box {
+            background: var(--bg-card2);
+            border: 1px dashed rgba(245,158,11,0.4);
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 12px;
+        }
+        .token-box .label { color: var(--accent-yellow); font-weight: 600; margin-bottom: 4px; }
+        .token-box code {
+            color: var(--text-primary);
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+        .empty-state .icon { font-size: 36px; margin-bottom: 10px; }
+        .empty-state p { font-size: 13px; }
+
+        @media (max-width: 900px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="header-logo">
+        <div class="icon">🤖</div>
+        <div>
+            <h1>WhatsApp Bot</h1>
+            <span>API Dashboard</span>
+        </div>
+    </div>
+    <div class="status-badge disconnected" id="statusBadge">
+        <div class="status-dot"></div>
+        <span id="statusText">Menghubungkan...</span>
+    </div>
+</header>
+
+<div class="container">
+    <div class="grid">
+
+        <!-- Left Column: QR & Send API -->
+        <div style="display: flex; flex-direction: column; gap: 24px;">
+
+            <!-- QR Code Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <div class="dot" style="background: #f59e0b;"></div>
+                        Scan QR Code
+                    </div>
+                    <span style="font-size: 11px; color: var(--text-muted);">Realtime via WebSocket</span>
+                </div>
+                <div class="qr-container">
+                    <div class="qr-wrapper" id="qrWrapper">
+                        <div class="qr-placeholder" id="qrPlaceholder">
+                            <div class="icon-big">📱</div>
+                            <p>Menunggu QR Code...</p>
+                        </div>
+                        <img id="qrImage" src="" alt="QR Code" style="display:none;">
+                    </div>
+                    <div class="qr-status-text" id="qrStatusText">
+                        <strong id="qrStatusTitle">Menghubungkan ke server...</strong>
+                        <span id="qrStatusDesc">Pastikan server berjalan dan WhatsApp belum terhubung</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Send Message API -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <div class="dot" style="background: #3b82f6;"></div>
+                        Kirim Pesan via API
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="api-section">
+                        <div class="form-group">
+                            <label class="form-label">API Token</label>
+                            <input class="form-input" id="apiToken" type="password" placeholder="Masukkan X-API-Token Anda...">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nomor Tujuan</label>
+                            <input class="form-input" id="toNumber" type="text" placeholder="6281234567890 (tanpa + atau 0 di depan)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Isi Pesan</label>
+                            <textarea class="form-input" id="messageText" rows="3" placeholder="Ketik pesan yang ingin dikirim..." style="resize: vertical;"></textarea>
+                        </div>
+                        <button class="btn-send" id="sendBtn" onclick="sendMessage()">
+                            <span>📤</span> Kirim Pesan
+                        </button>
+
+                        <div class="api-doc">
+                            <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">📋 API Reference</div>
+                            <code><span class="method">POST</span> /api/send</code>
+                            <code>Header: X-API-Token: &lt;token&gt;</code>
+                            <code>Body: { "to": "628xxx", "message": "Halo!" }</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Notification Feed -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="dot" style="background: var(--accent-green);"></div>
+                    Notifikasi Realtime
+                </div>
+                <button onclick="clearNotifs()" style="background:none;border:1px solid var(--border);color:var(--text-muted);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;">Bersihkan</button>
+            </div>
+            <div class="notif-feed" id="notifFeed">
+                <div class="empty-state" id="emptyNotif">
+                    <div class="icon">🔔</div>
+                    <p>Belum ada notifikasi masuk.<br>Pesan WhatsApp akan muncul di sini secara realtime.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+const WS_URL = `ws://${location.host}`;
+let ws = null;
+let notifCount = 0;
+
+function connectWS() {
+    ws = new WebSocket(WS_URL);
+
+    ws.onopen = () => {
+        console.log('✅ WebSocket terhubung');
+        showToast('info', '📡', 'Terhubung ke server WebSocket');
+    };
+
+    ws.onmessage = (evt) => {
+        try {
+            const { event, data, timestamp } = JSON.parse(evt.data);
+            handleEvent(event, data, timestamp);
+        } catch(e) {}
+    };
+
+    ws.onclose = () => {
+        console.log('❌ WebSocket terputus, reconnecting...');
+        setStatus('disconnected', 'Terputus');
+        setTimeout(connectWS, 3000);
+    };
+
+    ws.onerror = (err) => {
+        console.error('WS Error:', err);
+    };
+}
+
+function handleEvent(event, data, timestamp) {
+    const time = new Date(timestamp).toLocaleTimeString('id-ID');
+
+    switch(event) {
+        case 'state':
+            updateQRState(data.status, data.qr);
+            setStatusFromState(data.status);
+            break;
+
+        case 'loading':
+            setStatus('disconnected', `Loading ${data.percent}%`);
+            addNotif('⏳', `Memuat WhatsApp (${data.percent}%)`, data.message, time, 'info');
+            break;
+
+        case 'qr':
+            setStatus('qr', 'Scan QR');
+            showQR(data.qrDataURL || null, data.qr);
+            addNotif('📱', 'QR Code Baru Tersedia', 'Silakan scan QR code di panel kiri', time, 'warning');
+            break;
+
+        case 'authenticated':
+            setStatus('authenticated', 'Autentikasi...');
+            hideQR();
+            addNotif('🎉', 'Autentikasi Berhasil!', data.message, time, 'success');
+            break;
+
+        case 'ready':
+            setStatus('ready', 'Terhubung');
+            hideQR();
+            addNotif('✅', 'Bot Siap Digunakan!', data.message, time, 'success');
+            showToast('success', '✅', 'Bot WhatsApp SIAP!');
+            break;
+
+        case 'disconnected':
+            setStatus('disconnected', 'Terputus');
+            addNotif('❌', 'Bot Terputus', `Alasan: ${data.reason}`, time, 'error');
+            break;
+
+        case 'message_received':
+            addNotif('📩', `Pesan dari ${formatNumber(data.from)}`, data.body || '[Media/Lampiran]', time, 'incoming');
+            break;
+
+        case 'message_sent':
+            addNotif('📤', `Pesan terkirim ke ${formatNumber(data.to)}`, data.body, time, 'outgoing');
+            break;
+
+        case 'message_log':
+            if (data && data.length > 0) {
+                data.forEach(msg => {
+                    const t = new Date(msg.timestamp).toLocaleTimeString('id-ID');
+                    if (msg.direction === 'incoming') {
+                        addNotif('📩', `Pesan dari ${formatNumber(msg.from)}`, msg.body || '[Media]', t, 'incoming');
+                    } else {
+                        addNotif('📤', `Terkirim ke ${formatNumber(msg.to)}`, msg.body, t, 'outgoing');
+                    }
+                });
+            }
+            break;
+    }
+}
+
+function setStatus(type, text) {
+    const badge = document.getElementById('statusBadge');
+    const statusText = document.getElementById('statusText');
+    badge.className = `status-badge ${type}`;
+    statusText.textContent = text;
+}
+
+function setStatusFromState(state) {
+    const map = {
+        'DISCONNECTED': ['disconnected', 'Terputus'],
+        'QR': ['qr', 'Scan QR'],
+        'AUTHENTICATED': ['authenticated', 'Autentikasi...'],
+        'READY': ['ready', 'Terhubung']
+    };
+    const [type, text] = map[state] || ['disconnected', 'Tidak Diketahui'];
+    setStatus(type, text);
+}
+
+function showQR(dataURL, rawQR) {
+    const img = document.getElementById('qrImage');
+    const placeholder = document.getElementById('qrPlaceholder');
+    const title = document.getElementById('qrStatusTitle');
+    const desc = document.getElementById('qrStatusDesc');
+
+    if (dataURL) {
+        img.src = dataURL;
+        img.style.display = 'block';
+        placeholder.style.display = 'none';
+    }
+
+    title.textContent = 'QR Code siap!';
+    desc.textContent = 'Buka WhatsApp > Perangkat Tertaut > Tautkan Perangkat';
+}
+
+function hideQR() {
+    const img = document.getElementById('qrImage');
+    const placeholder = document.getElementById('qrPlaceholder');
+    const title = document.getElementById('qrStatusTitle');
+    const desc = document.getElementById('qrStatusDesc');
+
+    img.style.display = 'none';
+    placeholder.style.display = 'flex';
+    placeholder.innerHTML = '<div class="icon-big">✅</div><p>WhatsApp sudah terhubung!</p>';
+    title.textContent = 'Bot aktif dan terhubung';
+    desc.textContent = 'QR Code tidak diperlukan. Bot siap menerima dan mengirim pesan.';
+}
+
+function updateQRState(status, qr) {
+    if (status === 'QR' && qr) {
+        showQR(null, qr);
+    } else if (status === 'READY' || status === 'AUTHENTICATED') {
+        hideQR();
+    }
+}
+
+function addNotif(icon, title, body, time, type) {
+    const feed = document.getElementById('notifFeed');
+    const empty = document.getElementById('emptyNotif');
+    if (empty) empty.style.display = 'none';
+
+    notifCount++;
+    const item = document.createElement('div');
+    item.className = 'notif-item';
+    item.innerHTML = `
+        <div class="notif-icon">${icon}</div>
+        <div class="notif-content">
+            <div class="notif-title">${escapeHtml(title)}</div>
+            <div class="notif-body">${escapeHtml(body || '')}</div>
+        </div>
+        <div class="notif-time">${time}</div>
+    `;
+
+    feed.insertBefore(item, feed.firstChild);
+
+    // Keep max 100 items
+    while (feed.children.length > 101) {
+        feed.removeChild(feed.lastChild);
+    }
+}
+
+function clearNotifs() {
+    const feed = document.getElementById('notifFeed');
+    feed.innerHTML = `
+        <div class="empty-state" id="emptyNotif">
+            <div class="icon">🔔</div>
+            <p>Belum ada notifikasi masuk.<br>Pesan WhatsApp akan muncul di sini secara realtime.</p>
+        </div>
+    `;
+}
+
+async function sendMessage() {
+    const token = document.getElementById('apiToken').value.trim();
+    const to = document.getElementById('toNumber').value.trim();
+    const message = document.getElementById('messageText').value.trim();
+    const btn = document.getElementById('sendBtn');
+
+    if (!token) { showToast('error', '⚠️', 'Masukkan API Token terlebih dahulu'); return; }
+    if (!to) { showToast('error', '⚠️', 'Masukkan nomor tujuan'); return; }
+    if (!message) { showToast('error', '⚠️', 'Masukkan isi pesan'); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳</span> Mengirim...';
+
+    try {
+        const res = await fetch('/api/send', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-Token': token
+            },
+            body: JSON.stringify({ to, message })
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+            showToast('success', '✅', `Pesan berhasil dikirim ke ${to}!`);
+            document.getElementById('messageText').value = '';
+        } else {
+            showToast('error', '❌', result.error || 'Gagal mengirim pesan');
+        }
+    } catch(e) {
+        showToast('error', '❌', 'Gagal menghubungi server: ' + e.message);
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<span>📤</span> Kirim Pesan';
+}
+
+function showToast(type, icon, message) {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span>${icon}</span> <span>${escapeHtml(message)}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+}
+
+function formatNumber(jid) {
+    if (!jid) return 'Unknown';
+    return jid.replace('@c.us', '').replace('@g.us', ' (Grup)').replace('@lid', ' (Privat)');
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Start WebSocket connection
+connectWS();
+</script>
+
+</body>
+</html>

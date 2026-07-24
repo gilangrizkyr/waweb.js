@@ -1,0 +1,32 @@
+{
+  "name": "whatsapp-web.js",
+  "version": "1.34.7",
+  "description": "A WhatsApp client library for Node.js that connects through the WhatsApp Web browser app",
+  "main": "index.js",
+  "scripts": {
+    "start": "node example.js",
+    "test": "node --check index.js && node --check example.js"
+  },
+  "keywords": [
+    "whatsapp",
+    "whatsapp-web",
+    "whatsapp-api",
+    "whatsapp-bot",
+    "puppeteer"
+  ],
+  "author": "Gilang",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "eventemitter3": "^5.0.1",
+    "express": "^5.2.1",
+    "fluent-ffmpeg": "^2.1.3",
+    "mime-types": "^2.1.35",
+    "puppeteer": "^22.15.0",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0",
+    "uuid": "^14.0.1",
+    "whatsapp-web.js": "^1.34.7",
+    "ws": "^8.21.1"
+  }
+}
