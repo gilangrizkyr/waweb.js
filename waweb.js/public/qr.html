@@ -3,55 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp QR</title>
+    <title>WhatsApp QR Code</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: #0a0e17;
+            background: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Inter', sans-serif;
+            padding: 12px;
         }
         .wrap {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 14px;
+            width: 100%;
         }
         .qr-box {
             width: 220px; height: 220px;
-            background: white;
-            border-radius: 14px;
+            background: #f8fafc;
+            border-radius: 16px;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 30px rgba(37,211,102,0.2);
-            border: 3px solid rgba(37,211,102,0.35);
+            box-shadow: 0 4px 16px rgba(37,99,235,0.08);
+            border: 2px solid #3b82f6;
             overflow: hidden;
         }
-        .qr-box img { width: 200px; height: 200px; }
+        .qr-box img { width: 200px; height: 200px; border-radius: 8px; }
         .placeholder {
             display: flex; flex-direction: column; align-items: center; gap: 10px;
-            color: #888;
+            color: #64748b;
         }
-        .placeholder .icon { font-size: 40px; }
-        .placeholder p { font-size: 12px; text-align: center; }
+        .placeholder .icon { font-size: 42px; color: #2563eb; }
+        .placeholder p { font-size: 13px; text-align: center; font-weight: 500; }
         .status {
-            font-size: 12px;
-            color: #8899b0;
+            font-size: 13px;
+            color: #475569;
             text-align: center;
-            line-height: 1.6;
+            line-height: 1.5;
         }
-        .status strong { color: #f0f4ff; display: block; margin-bottom: 2px; }
+        .status strong { color: #0f172a; display: block; margin-bottom: 2px; font-weight: 700; }
         .dot {
-            display: inline-block; width: 7px; height: 7px;
+            display: inline-block; width: 8px; height: 8px;
             border-radius: 50%; background: #f59e0b;
             animation: pulse 1.5s infinite;
-            margin-right: 5px;
+            margin-right: 6px;
             vertical-align: middle;
         }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-        .dot.green { background: #25d366; }
+        .dot.green { background: #10b981; }
         .dot.red { background: #ef4444; animation: none; }
     </style>
 </head>
@@ -62,7 +66,7 @@
             <div class="icon">📱</div>
             <p>Menunggu<br>QR Code...</p>
         </div>
-        <img id="qrImg" src="" alt="QR" style="display:none;">
+        <img id="qrImg" src="" alt="QR Code" style="display:none;">
     </div>
     <div class="status" id="statusText">
         <span class="dot" id="dot"></span>
@@ -81,7 +85,6 @@ ws.onmessage = (evt) => {
             showQR(data.qrDataURL);
         } else if (event === 'state') {
             if (data.status === 'QR' && data.qr) {
-                // Fetch QR image from server
                 fetch('/api/qr?token=' + encodeURIComponent(getToken()))
                     .then(r => r.json())
                     .then(d => { if (d.qrDataURL) showQR(d.qrDataURL); });
@@ -122,9 +125,9 @@ function showQR(dataURL) {
 function showConnected() {
     document.getElementById('qrImg').style.display = 'none';
     document.getElementById('placeholder').style.display = 'flex';
-    document.getElementById('placeholder').innerHTML = '<div class="icon">✅</div><p>Terhubung!</p>';
+    document.getElementById('placeholder').innerHTML = '<div class="icon" style="color:#10b981;">✅</div><p style="color:#0f172a;font-weight:600;">Terhubung!</p>';
     document.getElementById('dot').className = 'dot green';
-    document.getElementById('statusTitle').textContent = 'Bot Aktif & Terhubung';
+    document.getElementById('statusTitle').textContent = 'WhatsApp Aktif';
     document.getElementById('statusDesc').textContent = 'Siap menerima & mengirim pesan';
 }
 
