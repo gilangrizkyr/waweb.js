@@ -1,0 +1,15 @@
+'use strict';
+
+const Contact = require('./Contact');
+
+/**
+ * Represents a Business Contact on WhatsApp
+ */
+class BusinessContact extends Contact {
+    _patch(data) {
+        this.businessProfile = data.businessProfile;
+        return super._patch(data);
+    }
+}
+
+module.exports = BusinessContact;
