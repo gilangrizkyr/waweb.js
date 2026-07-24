@@ -1,2 +1,3 @@
-2026/07/24-11:45:24.859 13277 Creating DB /persistent/home/Gilang/webjs/waweb.js/.wwebjs_auth/session-bot-session/Default/GCM Store since it was missing.
-2026/07/24-11:45:24.862 13277 Reusing MANIFEST /persistent/home/Gilang/webjs/waweb.js/.wwebjs_auth/session-bot-session/Default/GCM Store/MANIFEST-000001
+2026/07/24-11:56:09.418 15923 Reusing MANIFEST /persistent/home/Gilang/webjs/waweb.js/.wwebjs_auth/session-bot-session/Default/GCM Store/MANIFEST-000001
+2026/07/24-11:56:09.419 15923 Recovering log #3
+2026/07/24-11:56:09.419 15923 Reusing old log /persistent/home/Gilang/webjs/waweb.js/.wwebjs_auth/session-bot-session/Default/GCM Store/000003.log 

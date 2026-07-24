@@ -1,2 +1,3 @@
-2026/07/24-11:45:19.654 13279 Creating DB /persistent/home/Gilang/webjs/waweb.js/.wwebjs_auth/session-bot-session/Default/shared_proto_db since it was missing.
-2026/07/24-11:45:19.658 13279 Reusing MANIFEST /persistent/home/Gilang/webjs/waweb.js/.wwebjs_auth/session-bot-session/Default/shared_proto_db/MANIFEST-000001
+2026/07/24-11:56:06.298 15923 Reusing MANIFEST /persistent/home/Gilang/webjs/waweb.js/.wwebjs_auth/session-bot-session/Default/shared_proto_db/MANIFEST-000001
+2026/07/24-11:56:06.298 15923 Recovering log #3
+2026/07/24-11:56:06.298 15923 Reusing old log /persistent/home/Gilang/webjs/waweb.js/.wwebjs_auth/session-bot-session/Default/shared_proto_db/000003.log 

@@ -188,9 +188,9 @@ app.get('/api/status', authMiddleware, (req, res) => {
     });
 });
 
-// POST /api/send - Kirim pesan WhatsApp
+// POST /api/send - Kirim pesan WhatsApp (Support Single & Multi-Recipient)
 // Header: X-API-Token: <token>
-// Body: { to: "6281234567890", message: "Halo!" }
+// Body: { to: "6281234567890, 08987654321" ATAU ["6281234567890", "08987654321"], message: "Halo!" }
 app.post('/api/send', authMiddleware, async (req, res) => {
     const { to, message } = req.body;
 
@@ -208,49 +208,80 @@ app.post('/api/send', authMiddleware, async (req, res) => {
         });
     }
 
-    try {
-        // Normalize phone number format to WhatsApp JID
-        let chatId = to.toString().replace(/[^0-9]/g, '');
-        if (!chatId.endsWith('@c.us') && !chatId.includes('@')) {
-            chatId = `${chatId}@c.us`;
-        }
+    // Parse target numbers (support array or comma-separated string)
+    let rawTargets = [];
+    if (Array.isArray(to)) {
+        rawTargets = to;
+    } else if (typeof to === 'string') {
+        rawTargets = to.split(',').map(s => s.trim()).filter(Boolean);
+    } else {
+        rawTargets = [to.toString()];
+    }
 
-        const sentMsg = await client.sendMessage(chatId, message);
-
-        const logEntry = {
-            id: sentMsg.id._serialized,
-            to: chatId,
-            body: message,
-            type: 'chat',
-            timestamp: new Date().toISOString(),
-            direction: 'outgoing'
-        };
-
-        messageLog.push(logEntry);
-        if (messageLog.length > 200) messageLog.shift();
-
-        broadcast('message_sent', logEntry);
-
-        console.log(`📤 [API] Pesan terkirim ke ${chatId}: "${message}"`);
-
-        res.json({
-            success: true,
-            message: 'Pesan berhasil dikirim!',
-            data: {
-                to: chatId,
-                message,
-                messageId: sentMsg.id._serialized,
-                timestamp: logEntry.timestamp
-            }
-        });
-
-    } catch (err) {
-        console.error('❌ [API] Error kirim pesan:', err.message);
-        res.status(500).json({
+    if (rawTargets.length === 0) {
+        return res.status(400).json({
             success: false,
-            error: err.message
+            error: 'Tidak ada nomor tujuan yang valid'
         });
     }
+
+    const results = [];
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const rawTo of rawTargets) {
+        try {
+            let chatId = rawTo.toString().replace(/[^0-9]/g, '');
+            if (!chatId.endsWith('@c.us') && !chatId.includes('@')) {
+                chatId = `${chatId}@c.us`;
+            }
+
+            const sentMsg = await client.sendMessage(chatId, message);
+
+            const logEntry = {
+                id: sentMsg && sentMsg.id ? (sentMsg.id._serialized || sentMsg.id) : `sent_${Date.now()}`,
+                to: chatId,
+                body: message,
+                type: 'chat',
+                timestamp: new Date().toISOString(),
+                direction: 'outgoing'
+            };
+
+            messageLog.push(logEntry);
+            if (messageLog.length > 200) messageLog.shift();
+
+            broadcast('message_sent', logEntry);
+
+            console.log(`📤 [API] Pesan terkirim ke ${chatId}: "${message}"`);
+
+            results.push({
+                to: chatId,
+                status: 'sent',
+                messageId: logEntry.id
+            });
+            successCount++;
+
+        } catch (err) {
+            console.error(`❌ [API] Gagal kirim ke ${rawTo}:`, err.message);
+            results.push({
+                to: rawTo,
+                status: 'failed',
+                error: err.message
+            });
+            failCount++;
+        }
+    }
+
+    res.json({
+        success: successCount > 0,
+        message: `Pengiriman selesai. Success: ${successCount}, Failed: ${failCount}`,
+        summary: {
+            total: rawTargets.length,
+            successCount,
+            failCount
+        },
+        data: results
+    });
 });
 
 // GET /api/qr - Dapatkan QR code saat ini (sebagai data URL image)

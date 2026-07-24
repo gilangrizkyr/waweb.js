@@ -1,2 +1,3 @@
-2026/07/24-11:45:19.659 13296 Creating DB /persistent/home/Gilang/webjs/waweb.js/.wwebjs_auth/session-bot-session/Default/Local Storage/leveldb since it was missing.
-2026/07/24-11:45:19.667 13296 Reusing MANIFEST /persistent/home/Gilang/webjs/waweb.js/.wwebjs_auth/session-bot-session/Default/Local Storage/leveldb/MANIFEST-000001
+2026/07/24-11:56:06.271 1594e Reusing MANIFEST /persistent/home/Gilang/webjs/waweb.js/.wwebjs_auth/session-bot-session/Default/Local Storage/leveldb/MANIFEST-000001
+2026/07/24-11:56:06.275 1594e Recovering log #3
+2026/07/24-11:56:06.276 1594e Reusing old log /persistent/home/Gilang/webjs/waweb.js/.wwebjs_auth/session-bot-session/Default/Local Storage/leveldb/000003.log 

@@ -71,27 +71,49 @@ Mengirim pesan WhatsApp ke nomor tujuan.
 | `Content-Type` | `string` | `application/json` |
 | `X-API-Token` | `string` | `[API_TOKEN Anda]` |
 
-#### Request Body:
+#### Request Body (Mendukung Multi-Nomor / Broadcast):
+Bisa menggunakan **String dipisahkan koma** atau **Array of Strings**:
+
 ```json
 {
-  "to": "6281234567890",
-  "message": "Halo! Ini pesan dikirim melalui API."
+  "to": "6281234567890, 08987654321, 62811223344",
+  "message": "Halo! Ini pesan broadcast ke banyak nomor."
 }
 ```
 
-> **Format Nomor (`to`):** Bisa menggunakan format `628xxx` atau `08xxx`. Sistem akan otomatis memformatnya menjadi JID WhatsApp (`628xxx@c.us`).
+Atau menggunakan Array:
+
+```json
+{
+  "to": ["6281234567890", "08987654321"],
+  "message": "Halo! Ini pesan dikirim via array."
+}
+```
+
+> **Format Nomor (`to`):** Bisa menggunakan format `628xxx` atau `08xxx`. Setiap nomor akan diproses dan dikirim satu per satu secara otomatis.
 
 #### Example Response (Success - 200 OK):
 ```json
 {
   "success": true,
-  "message": "Pesan berhasil dikirim!",
-  "data": {
-    "to": "6281234567890@c.us",
-    "message": "Halo! Ini pesan dikirim melalui API.",
-    "messageId": "true_6281234567890@c.us_3EB0...",
-    "timestamp": "2026-07-24T11:40:00.000Z"
-  }
+  "message": "Pengiriman selesai. Success: 2, Failed: 0",
+  "summary": {
+    "total": 2,
+    "successCount": 2,
+    "failCount": 0
+  },
+  "data": [
+    {
+      "to": "6281234567890@c.us",
+      "status": "sent",
+      "messageId": "true_6281234567890@c.us_3EB0..."
+    },
+    {
+      "to": "628987654321@c.us",
+      "status": "sent",
+      "messageId": "true_628987654321@c.us_3EB0..."
+    }
+  ]
 }
 ```
 

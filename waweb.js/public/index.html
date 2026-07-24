@@ -350,8 +350,8 @@
                             <input class="form-input" id="apiToken" type="password" placeholder="Masukkan X-API-Token Anda...">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Nomor Tujuan</label>
-                            <input class="form-input" id="toNumber" type="text" placeholder="6281234567890 (atau 08xxx)">
+                            <label class="form-label">Nomor Tujuan (Bisa Lebih Dari 1, Pisahkan Koma)</label>
+                            <input class="form-input" id="toNumber" type="text" placeholder="Contoh: 6281234567890, 08987654321, 62811223344">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Isi Pesan</label>
@@ -365,7 +365,7 @@
                             <div style="font-weight: 700; color: var(--accent-blue); margin-bottom: 6px;">📋 Petunjuk Integrasi API</div>
                             <code><span class="method">POST</span> /api/send</code>
                             <code>Header: X-API-Token: &lt;token_anda&gt;</code>
-                            <code>Body: { "to": "628xxx", "message": "Halo!" }</code>
+                            <code>Body: { "to": "628111, 628222" ATAU ["628111", "628222"], "message": "Halo!" }</code>
                         </div>
                     </div>
                 </div>
