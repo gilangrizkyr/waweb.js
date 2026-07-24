@@ -138,7 +138,7 @@ client.on('message', async (msg) => {
     console.log(`📩 [Pesan dari ${msg.from}]: "${msg.body}"`);
     broadcast('message_received', logEntry);
 
-    // ─── Bot Commands (dinonaktifkan sementara, jangan hapus!) ───────────────
+    // ─── Bot Commands (dinonaktifkan sementara) ───────────────
     /*
     try {
         if (msg.body === '!ping') {
