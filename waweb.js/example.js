@@ -1,13 +1,15 @@
 'use strict';
 
-/**
- * Bot WhatsApp menggunakan library resmi whatsapp-web.js
- * https://github.com/wwebjs/whatsapp-web.js
- */
-const { Client, LocalAuth, MessageMedia, Location, Poll } = require('whatsapp-web.js');
+const {
+    Client,
+    LocalAuth,
+    Location,
+    Poll
+} = require('whatsapp-web.js');
+
 const qrcode = require('qrcode-terminal');
 
-console.log('🚀 Initializing WhatsApp Bot...');
+console.log('[BOT] Starting WhatsApp client...');
 
 const client = new Client({
     authStrategy: new LocalAuth({
@@ -19,77 +21,126 @@ const client = new Client({
             '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
-            '--disable-accelerated-2d-canvas',
-            '--no-first-run',
-            '--no-zygote',
             '--disable-gpu'
         ]
     }
 });
 
 client.on('loading_screen', (percent, message) => {
-    console.log(`⏳ Loading: [${percent}%] ${message}`);
+    console.log(`[LOAD] ${percent}% - ${message}`);
 });
 
 client.on('qr', (qr) => {
-    console.log('\n✅ QR Code siap! Scan dengan WhatsApp:\n');
-    qrcode.generate(qr, { small: true });
+    console.log('\n[AUTH] Scan QR Code dengan WhatsApp:\n');
+    qrcode.generate(qr, {
+        small: true
+    });
 });
 
 client.on('authenticated', () => {
-    console.log('🎉 Authentication successful!');
+    console.log('[AUTH] Login berhasil');
 });
 
 client.on('ready', () => {
-    console.log('\n======================================================');
-    console.log('🤖 BOT WHATSAPP SUDAH AKTIF DAN SIAP MENERIMA PESAN!');
-    console.log('📌 Silakan kirim pesan ke nomor WhatsApp ini.');
-    console.log('======================================================\n');
+    console.log(`
+========================================
+ WhatsApp Bot Online
+ Status : Ready
+========================================
+    `);
 });
 
 client.on('disconnected', (reason) => {
-    console.log('❌ Bot disconnected:', reason);
+    console.log('[SYSTEM] Client disconnected:', reason);
 });
 
-client.on('message', async (msg) => {
-    if (msg.isStatus) return;
 
-    console.log(`📩 [Pesan dari ${msg.from}]: "${msg.body}"`);
+client.on('message', async (message) => {
+    if (message.isStatus) return;
+
+    const text = message.body.trim();
+
+    console.log(`[MESSAGE] ${message.from}: ${text}`);
 
     try {
-        if (msg.body === '!ping') {
-            await msg.reply('pong');
-            console.log('📤 [Bot Membalas]: "pong"');
+        switch (true) {
 
-        } else if (msg.body === '!reaction') {
-            await msg.react('👍');
-            console.log('📤 [Bot React]: 👍');
+            case text === '!ping':
+                await message.reply('pong');
+                break;
 
-        } else if (msg.body === '!location') {
-            const loc = new Location(-6.2088, 106.8456, 'Jakarta, Indonesia');
-            await client.sendMessage(msg.from, loc);
-            console.log('📤 [Bot Kirim]: Lokasi Jakarta');
 
-        } else if (msg.body === '!poll') {
-            const poll = new Poll('Apa bahasa pemrograman favoritmu?', [
-                'JavaScript', 'Python', 'TypeScript', 'Go'
-            ]);
-            await client.sendMessage(msg.from, poll);
-            console.log('📤 [Bot Kirim]: WhatsApp Poll');
+            case text === '!reaction':
+                await message.react('👍');
+                break;
 
-        } else if (msg.body.startsWith('!echo ')) {
-            const echoText = msg.body.slice(6);
-            await msg.reply(echoText);
-            console.log(`📤 [Bot Echo]: "${echoText}"`);
 
-        } else if (msg.body.trim()) {
-            const responseText = `🤖 *Bot Auto-Reply*\n\nHalo! Pesan Anda: _"${msg.body}"_ sudah diterima.\n\n*Perintah tersedia:*\n• *!ping* - Test koneksi\n• *!reaction* - React emoji 👍\n• *!location* - Kirim lokasi\n• *!poll* - Buat polling\n• *!echo [teks]* - Echo teks`;
-            await msg.reply(responseText);
-            console.log(`📤 [Bot Auto-Reply]`);
+            case text === '!location': {
+                const location = new Location(
+                    -6.2088,
+                    106.8456,
+                    'Jakarta, Indonesia'
+                );
+
+                await client.sendMessage(
+                    message.from,
+                    location
+                );
+                break;
+            }
+
+
+            case text === '!poll': {
+                const poll = new Poll(
+                    'Apa bahasa pemrograman favorit kamu?',
+                    [
+                        'JavaScript',
+                        'Python',
+                        'TypeScript',
+                        'Go'
+                    ]
+                );
+
+                await client.sendMessage(
+                    message.from,
+                    poll
+                );
+                break;
+            }
+
+
+            case text.startsWith('!echo '):
+                await message.reply(
+                    text.substring(6)
+                );
+                break;
+
+
+            default:
+                if (text) {
+                    const reply = `
+Halo, pesan kamu sudah diterima.
+
+Daftar perintah:
+- !ping
+- !reaction
+- !location
+- !poll
+- !echo [teks]
+                    `.trim();
+
+                    await message.reply(reply);
+                }
+
         }
-    } catch (err) {
-        console.error('❌ Error saat membalas pesan:', err.message);
+
+    } catch (error) {
+        console.error(
+            '[ERROR]',
+            error.message
+        );
     }
 });
+
 
 client.initialize();
